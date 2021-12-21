@@ -114,36 +114,29 @@ scrapeInfoPage = async (list) => {
         }
       })
       .then(async (advertObject) => {
-        let elHandleList = await page.$x(
-          "//*[@id='mainGallery']/div[*]/div[*]/app-media-item/picture/img"
-        );
-        if (elHandleList && elHandleList.length > 0) {
-          let picsArray = [];
+        let picsArray = [];
+        await page
+          .$x("//*[@id='mainGallery']/div[*]/div[*]/app-media-item/picture/img")
+          .then(async (elHandleList) => {
+            await new Promise((resolve, reject) => {
+              elHandleList.forEach(async (elemHandle, i) => {
+                const img = await page.evaluate((imgTag) => {
+                  return {
+                    url: imgTag.src,
+                    title: imgTag["dataset"].src || imgTag.title,
+                  };
+                }, elemHandle);
 
-          await new Promise((resolve, reject) => {
-            elHandleList.forEach(async (elemHandle, i) => {
-              const img = await page.evaluate((imgTag) => {
-                return {
-                  url: imgTag.src,
-                  title: imgTag["dataset"].src || imgTag.title,
-                };
-              }, elemHandle);
-
-              picsArray.push(img);
-              if (i === elHandleList.length - 1) {
-                resolve();
-              }
+                picsArray.push(img);
+                if (i === elHandleList.length - 1) {
+                  advertObject["pictures"] = picsArray;
+                  console.log("#3 advertObject", advertObject);
+                  resolve();
+                }
+              });
             });
           });
-
-          advertObject["pictures"] = picsArray;
-
-          console.log("#3 advertObject", advertObject);
-
-          return advertObject;
-        } else {
-          return;
-        }
+        return advertObject;
       });
   }
   await browser.close();
@@ -194,29 +187,6 @@ scrapeList()
 // await page.click('input[value="Login"]')
 
 // await browser.close();
-
-// const getAdvertInfos = await page.evaluate(() => {
-
-//     const tmp = document.querySelectorAll('.has-font-300');
-
-//     const miete = tmp[0].querySelectorAll('strong')[0];
-
-//     const flaeche = tmp[1].innerText;
-
-//     const zimmer = tmp[2].innerText;
-
-//     const objectsArray = [];
-
-//     page.click('https://www.immowelt.de/expose/23ree5r', {delay: 500})
-
-//     objectsArray.push({
-//         miete: miete.innerText,
-//         flaeche: flaeche,
-//         zimmer: zimmer
-//     })
-
-//     return objectsArray;
-// })
 
 // const grapQuotes = await page.evaluate(() => {
 //     const quotes = document.querySelectorAll('.quote');
